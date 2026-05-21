@@ -5,44 +5,37 @@
 #include <limits>
 #include <algorithm>
 using namespace std;
- 
-// ============================================================
-//  HELPER
-// ============================================================
+
 void clearBuffer() {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
- 
+
 void garis(char c = '=', int n = 55) {
     for (int i = 0; i < n; i++) cout << c;
     cout << endl;
 }
- 
+
 void judul(string teks) {
     garis();
     cout << "  " << teks << endl;
     garis();
 }
- 
-// ============================================================
-//  MODUL 4 - ABSTRACT CLASS
-// ============================================================
 class Peserta {
 protected:
     string nama;
     string asal_kota;
- 
+
 public:
     Peserta(string n, string a) : nama(n), asal_kota(a) {}
- 
+
     virtual void tampilInfo()             = 0;
     virtual void tampilInfo(bool ringkas) = 0;
     virtual string getTipe()              = 0;
     virtual string getKategoriGame()      = 0;
- 
+
     string getNama()     const { return nama; }
     string getAsalKota() const { return asal_kota; }
- 
+
     void setNama(string n) {
         if (n.empty()) { cout << "  Nama tidak boleh kosong!\n"; return; }
         nama = n;
@@ -51,13 +44,9 @@ public:
         if (a.empty()) { cout << "  Asal kota tidak boleh kosong!\n"; return; }
         asal_kota = a;
     }
- 
+
     virtual ~Peserta() {}
 };
- 
-// ============================================================
-//  MODUL 1, 2 - BASE CLASS Tim
-// ============================================================
 class Tim : public Peserta {
 protected:
     string         nama_game;
@@ -67,16 +56,12 @@ protected:
     int            kalah;
     int            poin;
     int            kuota_pemain;
- 
+
 public:
-    Tim() : Peserta("Unknown", "Unknown"),
-            nama_game("-"), tag_tim("-"),
-            menang(0), kalah(0), poin(0), kuota_pemain(5) {}
- 
     Tim(string n, string a, string game, string tag, int kuota = 5)
         : Peserta(n, a), nama_game(game), tag_tim(tag),
           menang(0), kalah(0), poin(0), kuota_pemain(kuota) {}
- 
+
     string getNamaGame()   const { return nama_game; }
     string getTag()        const { return tag_tim; }
     int    getMenang()     const { return menang; }
@@ -85,16 +70,12 @@ public:
     int    getKuota()      const { return kuota_pemain; }
     int    jumlahAnggota() const { return (int)anggota.size(); }
     vector<string>& getAnggota() { return anggota; }
- 
+
     void setTag(string t) {
         if (t.empty()) { cout << "  Tag tidak boleh kosong!\n"; return; }
         tag_tim = t;
     }
-    void setPoin(int p) {
-        if (p < 0) { cout << "  Poin tidak boleh negatif!\n"; return; }
-        poin = p;
-    }
- 
+
     void tambahAnggota(string nama_pemain) {
         if (nama_pemain.empty()) { cout << "  Nama pemain tidak boleh kosong!\n"; return; }
         if ((int)anggota.size() >= kuota_pemain) {
@@ -113,7 +94,7 @@ public:
              << "\" ditambahkan ke " << nama << "! ("
              << anggota.size() << "/" << kuota_pemain << ")\n";
     }
- 
+
     void hapusAnggota(int index) {
         if (index < 0 || index >= (int)anggota.size()) {
             cout << "  Index tidak valid!\n"; return;
@@ -122,23 +103,27 @@ public:
              << "\" dihapus dari " << nama << "!\n";
         anggota.erase(anggota.begin() + index);
     }
- 
+
     void catatMenang() { menang++; poin += 3; }
     void catatKalah()  { kalah++;             }
     void catatSeri()   { poin += 1;           }
- 
+
+    void kurangiMenang() { if (menang > 0) menang--; if (poin >= 3) poin -= 3; }
+    void kurangiKalah()  { if (kalah  > 0) kalah--;  }
+    void kurangiSeri()   { if (poin   > 0) poin--;   }
+
     void resetStatistik() {
         menang = 0; kalah = 0; poin = 0;
         cout << "  Statistik " << nama << " direset!\n";
     }
- 
     string getStatus() const {
         if (menang == 0 && kalah == 0) return "Belum main";
-        if (menang > kalah)  return "Lolos";
-        if (menang == kalah) return "Imbang";
+        if (poin >= (menang + kalah) * 2) return "Lolos";
+        if (menang > kalah)              return "Lolos";
+        if (menang == kalah)             return "Persaingan";
         return "Tersingkir";
     }
- 
+
     void cetakRoster() {
         cout << "  Roster " << nama << " [" << tag_tim << "] ("
              << anggota.size() << "/" << kuota_pemain << "):\n";
@@ -146,30 +131,32 @@ public:
         for (int i = 0; i < (int)anggota.size(); i++)
             cout << "    " << (i+1) << ". " << anggota[i] << "\n";
     }
- 
+
     string getTipe()         override { return "Tim"; }
     string getKategoriGame() override { return nama_game; }
- 
     void tampilInfo() override {
         garis('-', 55);
-        cout << "  Nama Tim   : " << nama      << " [" << tag_tim << "]\n";
+        cout << "  Nama Tim   : " << nama << " [" << tag_tim << "]\n";
         cout << "  Asal Kota  : " << asal_kota << "\n";
         cout << "  Game       : " << nama_game << "\n";
         cout << "  Tipe       : " << getTipe() << "\n";
         cout << "  Kuota      : " << anggota.size() << "/" << kuota_pemain << " pemain\n";
         cout << "  Anggota    : ";
-        if (anggota.empty()) cout << "(belum ada)";
-        for (int i = 0; i < (int)anggota.size(); i++) {
-            if (i > 0) cout << ", ";
-            cout << anggota[i];
+        if (anggota.empty()) {
+            cout << "(belum ada)\n";
+        } else {
+            for (int i = 0; i < (int)anggota.size(); i++) {
+                if (i > 0) cout << ", ";
+                cout << anggota[i];
+            }
+            cout << "\n";
         }
-        cout << "\n";
         cout << "  Statistik  : " << menang << "M / "
              << kalah << "K | Poin: " << poin << "\n";
         cout << "  Status     : " << getStatus() << "\n";
         garis('-', 55);
     }
- 
+
     void tampilInfo(bool ringkas) override {
         if (ringkas) {
             cout << "  [" << left << setw(5) << tag_tim << "] "
@@ -181,113 +168,76 @@ public:
         }
     }
 };
- 
-// ============================================================
-//  MODUL 3 - SUBCLASS MOBA
-//  Tiga subclass berdasarkan judul game MOBA yang berbeda
-// ============================================================
- 
-// --- Mobile Legends ---
 class TimML : public Tim {
-private:
-    string server_id; // ID server Mobile Legends
- 
 public:
-    TimML(string n, string a, string tag, string sid = "-")
-        : Tim(n, a, "Mobile Legends", tag, 5), server_id(sid) {}
- 
-    string getServerId()     const { return server_id; }
-    void   setServerId(string s)   { server_id = s; }
- 
+    TimML(string n, string a, string tag)
+        : Tim(n, a, "Mobile Legends", tag, 5) {}
+
     string getTipe()         override { return "Tim Mobile Legends"; }
     string getKategoriGame() override { return "Mobile Legends"; }
- 
+
     void tampilInfo() override {
         Tim::tampilInfo();
-        cout << "  [ML]   Server ID : " << server_id  << "\n";
-        cout << "  [ML]   Kuota     : " << jumlahAnggota()
-             << "/" << getKuota() << " pemain\n";
-        garis('-', 55);
+        cout << "  [ML] Format      : 5v5 Classic / Ranked\n";
+        cout << "  [ML] Max Pemain  : " << getKuota() << " (termasuk cadangan)\n";
     }
- 
+
     void tampilInfo(bool ringkas) override {
         if (ringkas) Tim::tampilInfo(true);
         else tampilInfo();
     }
 };
- 
-// --- Honor of Kings ---
+
 class TimHoK : public Tim {
-private:
-    string region; // region HoK (Asia, Global, dll)
- 
 public:
-    TimHoK(string n, string a, string tag, string reg = "Asia")
-        : Tim(n, a, "Honor of Kings", tag, 5), region(reg) {}
- 
-    string getRegion()       const { return region; }
-    void   setRegion(string r)     { region = r; }
- 
+    TimHoK(string n, string a, string tag)
+        : Tim(n, a, "Honor of Kings", tag, 5) {}
+
     string getTipe()         override { return "Tim Honor of Kings"; }
     string getKategoriGame() override { return "Honor of Kings"; }
- 
+
     void tampilInfo() override {
         Tim::tampilInfo();
-        cout << "  [HoK]  Region   : " << region << "\n";
-        cout << "  [HoK]  Kuota    : " << jumlahAnggota()
-             << "/" << getKuota() << " pemain\n";
-        garis('-', 55);
+        cout << "  [HoK] Format     : 5v5 Arena\n";
+        cout << "  [HoK] Max Pemain : " << getKuota() << " (termasuk cadangan)\n";
     }
- 
+
     void tampilInfo(bool ringkas) override {
         if (ringkas) Tim::tampilInfo(true);
         else tampilInfo();
     }
 };
- 
-// --- Dota 2 ---
+
 class TimDota : public Tim {
-private:
-    string divisi; // divisi liga (Open, Challengers, Premier)
- 
 public:
-    TimDota(string n, string a, string tag, string div = "Open")
-        : Tim(n, a, "Dota 2", tag, 5), divisi(div) {}
- 
-    string getDivisi()       const { return divisi; }
-    void   setDivisi(string d)     { divisi = d; }
- 
+    TimDota(string n, string a, string tag)
+        : Tim(n, a, "Dota 2", tag, 5) {}
+
     string getTipe()         override { return "Tim Dota 2"; }
     string getKategoriGame() override { return "Dota 2"; }
- 
+
     void tampilInfo() override {
         Tim::tampilInfo();
-        cout << "  [D2]   Divisi   : " << divisi << "\n";
-        cout << "  [D2]   Kuota    : " << jumlahAnggota()
-             << "/" << getKuota() << " pemain\n";
-        garis('-', 55);
+        cout << "  [D2] Format      : 5v5 All Pick / Captain Mode\n";
+        cout << "  [D2] Max Pemain  : " << getKuota() << " (termasuk cadangan)\n";
     }
- 
+
     void tampilInfo(bool ringkas) override {
         if (ringkas) Tim::tampilInfo(true);
         else tampilInfo();
     }
 };
- 
-// ============================================================
-//  MODUL 1 - CLASS Hadiah
-// ============================================================
 class Hadiah {
 private:
     long long juara1;
     long long juara2;
     long long juara3;
     string    sponsor;
- 
+
 public:
     Hadiah(long long h1, long long h2, long long h3, string sp)
         : juara1(h1), juara2(h2), juara3(h3), sponsor(sp) {}
- 
+
     long long getHadiah(int juara) const {
         if (juara == 1) return juara1;
         if (juara == 2) return juara2;
@@ -295,7 +245,7 @@ public:
         return 0;
     }
     string getSponsor() const { return sponsor; }
- 
+
     void tampilHadiah() {
         garis('*', 55);
         cout << "  PRIZE POOL | Sponsor: " << sponsor << "\n";
@@ -306,10 +256,6 @@ public:
         garis('*', 55);
     }
 };
- 
-// ============================================================
-//  MODUL 1 - CLASS Pertandingan
-// ============================================================
 class Pertandingan {
 private:
     int  nomor;
@@ -318,19 +264,43 @@ private:
     int  skor1;
     int  skor2;
     bool selesai;
- 
+
 public:
     Pertandingan(int no, Tim* t1, Tim* t2)
         : nomor(no), tim1(t1), tim2(t2),
           skor1(0), skor2(0), selesai(false) {}
- 
+
+private:
+    void batalkanHasil() {
+        if (!selesai) return;
+        if (skor1 > skor2) {
+            tim1->kurangiMenang();
+            tim2->kurangiKalah();
+        } else if (skor2 > skor1) {
+            tim2->kurangiMenang();
+            tim1->kurangiKalah();
+        } else {
+            tim1->kurangiSeri();
+            tim2->kurangiSeri();
+        }
+        skor1 = 0; skor2 = 0; selesai = false;
+        cout << "  Hasil pertandingan dibatalkan, siap diinput ulang.\n";
+    }
+
+public:
     void inputSkor() {
-        if (selesai) { cout << "  Pertandingan ini sudah selesai!\n"; return; }
+        if (selesai) {
+            cout << "  Pertandingan ini sudah selesai!\n";
+            cout << "  Ingin koreksi hasil? (y/n): ";
+            char k; cin >> k; clearBuffer();
+            if (k == 'y' || k == 'Y') batalkanHasil();
+            else return;
+        }
         garis('-', 55);
         cout << "  Match " << nomor << " : "
              << tim1->getNama() << " vs " << tim2->getNama() << "\n";
         garis('-', 55);
- 
+
         do {
             cout << "  Skor " << tim1->getNama() << " : ";
             while (!(cin >> skor1)) {
@@ -339,7 +309,7 @@ public:
             }
             if (skor1 < 0) cout << "  Skor tidak boleh negatif!\n";
         } while (skor1 < 0);
- 
+
         do {
             cout << "  Skor " << tim2->getNama() << " : ";
             while (!(cin >> skor2)) {
@@ -348,9 +318,9 @@ public:
             }
             if (skor2 < 0) cout << "  Skor tidak boleh negatif!\n";
         } while (skor2 < 0);
- 
+
         clearBuffer();
- 
+
         cout << "\n  HASIL: ";
         if (skor1 > skor2) {
             tim1->catatMenang(); tim2->catatKalah();
@@ -366,7 +336,7 @@ public:
         }
         selesai = true;
     }
- 
+
     void tampilBaris() {
         cout << "  Match " << setw(2) << nomor << " : "
              << left << setw(22) << tim1->getNama()
@@ -375,28 +345,23 @@ public:
         else         cout << "| Belum dimainkan";
         cout << "\n";
     }
- 
+
     bool getSudahSelesai() const { return selesai; }
     int  getNomor()        const { return nomor;   }
 };
- 
-// ============================================================
-//  MODUL 1 - CLASS Turnamen (khusus MOBA)
-// ============================================================
 class Turnamen {
 private:
     string               nama;
     string               lokasi;
     string               tanggal;
-    string               game_moba;   // game MOBA spesifik turnamen ini
+    string               game_moba;
     vector<Tim*>         daftar_tim;
     vector<Pertandingan> jadwal;
-    Hadiah*              hadiah;
- 
+    Hadiah               hadiah;
+
 public:
-    Turnamen(string n, string lok, string tgl, string game, Hadiah* h)
+    Turnamen(string n, string lok, string tgl, string game, Hadiah h)
         : nama(n), lokasi(lok), tanggal(tgl), game_moba(game), hadiah(h) {}
- 
     bool daftarkanTim(Tim* t) {
         if (t->getKategoriGame() != game_moba) {
             cout << "  GAGAL! Tim \"" << t->getNama() << "\""
@@ -406,8 +371,13 @@ public:
         }
         for (auto tim : daftar_tim) {
             if (tim->getNama() == t->getNama()) {
-                cout << "  GAGAL! Tim \"" << t->getNama()
+                cout << "  GAGAL! Nama tim \"" << t->getNama()
                      << "\" sudah terdaftar!\n";
+                return false;
+            }
+            if (tim->getTag() == t->getTag()) {
+                cout << "  GAGAL! Tag \"" << t->getTag()
+                     << "\" sudah dipakai tim lain!\n";
                 return false;
             }
         }
@@ -416,7 +386,7 @@ public:
              << "\" [" << t->getTag() << "] berhasil didaftarkan!\n";
         return true;
     }
- 
+
     void buatJadwal() {
         if ((int)daftar_tim.size() < 2) {
             cout << "  Minimal 2 tim untuk membuat jadwal!\n"; return;
@@ -429,7 +399,7 @@ public:
         cout << "  " << jadwal.size()
              << " pertandingan berhasil dijadwalkan!\n";
     }
- 
+
     void tampilInfoTurnamen() {
         judul("INFO TURNAMEN MOBA");
         cout << "  Nama          : " << nama      << "\n";
@@ -438,10 +408,9 @@ public:
         cout << "  Game          : " << game_moba << "\n";
         cout << "  Tim Terdaftar : " << daftar_tim.size() << " tim\n";
         cout << "  Pertandingan  : " << jadwal.size() << " match\n";
-        hadiah->tampilHadiah();
+        hadiah.tampilHadiah();
     }
- 
-    // MODUL 4 - Runtime Polymorphism
+
     void tampilDaftarTim() {
         judul("DAFTAR TIM - " + game_moba);
         if (daftar_tim.empty()) { cout << "  Belum ada tim.\n"; return; }
@@ -460,7 +429,7 @@ public:
         garis('-', 55);
         cout << "  Total: " << daftar_tim.size() << " tim\n";
     }
- 
+
     void tampilDetailTim() {
         tampilDaftarTim();
         if (daftar_tim.empty()) return;
@@ -471,10 +440,9 @@ public:
         if (no < 1 || no > (int)daftar_tim.size()) {
             cout << "  Nomor tidak valid!\n"; return;
         }
-        Peserta* p = daftar_tim[no-1];
-        p->tampilInfo();
+        daftar_tim[no-1]->tampilInfo();
     }
- 
+
     void kelolaAnggota() {
         tampilDaftarTim();
         if (daftar_tim.empty()) return;
@@ -498,11 +466,28 @@ public:
         int sub;
         while (!(cin >> sub)) { cin.clear(); clearBuffer(); cout << "  Input angka: "; }
         clearBuffer();
- 
+
         if (sub == 1) {
-            cout << "  Nama pemain: ";
-            string np; getline(cin, np);
-            tim->tambahAnggota(np);
+            int sisa = tim->getKuota() - tim->jumlahAnggota();
+            if (sisa == 0) {
+                cout << "  Kuota tim sudah penuh!\n";
+            } else {
+                cout << "  Masukkan nama pemain satu per satu.\n";
+                cout << "  (Kosongkan nama lalu Enter untuk berhenti)\n";
+                garis('-', 55);
+                while (tim->jumlahAnggota() < tim->getKuota()) {
+                    cout << "  Pemain [" << tim->jumlahAnggota() + 1
+                         << "/" << tim->getKuota() << "] : ";
+                    string np; getline(cin, np);
+                    if (np.empty()) {
+                        cout << "  Input dihentikan.\n";
+                        break;
+                    }
+                    tim->tambahAnggota(np);
+                }
+                if (tim->jumlahAnggota() == tim->getKuota())
+                    cout << "  Kuota tim sudah penuh!\n";
+            }
         } else if (sub == 2) {
             tim->cetakRoster();
             if (tim->getAnggota().empty()) return;
@@ -513,9 +498,11 @@ public:
             tim->hapusAnggota(idx - 1);
         } else if (sub == 3) {
             tim->cetakRoster();
+        } else {
+            cout << "  Pilihan tidak valid!\n";
         }
     }
- 
+
     void editTim() {
         tampilDaftarTim();
         if (daftar_tim.empty()) return;
@@ -536,10 +523,18 @@ public:
         if (!s.empty()) tim->setAsalKota(s);
         cout << "  Tag baru (Enter = skip)      : ";
         getline(cin, s);
-        if (!s.empty()) tim->setTag(s);
+        if (!s.empty()) {
+            bool tagAda = false;
+            for (int i = 0; i < (int)daftar_tim.size(); i++) {
+                if (daftar_tim[i] != tim && daftar_tim[i]->getTag() == s) {
+                    cout << "  GAGAL! Tag \"" << s << "\" sudah dipakai tim lain!\n";
+                    tagAda = true; break;
+                }
+            }
+            if (!tagAda) tim->setTag(s);
+        }
         cout << "  Data berhasil diperbarui!\n";
     }
- 
     void hapusTim() {
         tampilDaftarTim();
         if (daftar_tim.empty()) return;
@@ -550,16 +545,19 @@ public:
         if (no < 1 || no > (int)daftar_tim.size()) {
             cout << "  Nomor tidak valid!\n"; return;
         }
+        cout << "  Yakin hapus tim \"" << daftar_tim[no-1]->getNama()
+             << "\"? Jadwal akan ikut dihapus. (y/n): ";
+        char k; cin >> k; clearBuffer();
+        if (k != 'y' && k != 'Y') {
+            cout << "  Penghapusan dibatalkan.\n"; return;
+        }
         cout << "  Tim \"" << daftar_tim[no-1]->getNama() << "\" dihapus.\n";
- 
-        // hapus jadwal dulu agar pointer di Pertandingan tidak dangling
         jadwal.clear();
         cout << "  Jadwal dihapus, silakan buat jadwal ulang.\n";
- 
         delete daftar_tim[no-1];
         daftar_tim.erase(daftar_tim.begin() + no - 1);
     }
- 
+
     void tampilJadwal() {
         judul("JADWAL PERTANDINGAN - " + game_moba);
         if (jadwal.empty()) { cout << "  Jadwal belum dibuat.\n"; return; }
@@ -570,7 +568,7 @@ public:
         cout << "  Selesai: " << selesai
              << "/" << jadwal.size() << " pertandingan\n";
     }
- 
+
     void inputHasil() {
         tampilJadwal();
         if (jadwal.empty()) return;
@@ -583,16 +581,18 @@ public:
         }
         jadwal[no-1].inputSkor();
     }
- 
     void tampilKlasemen() {
         if (daftar_tim.empty()) { cout << "  Belum ada tim.\n"; return; }
- 
+
+        int totalSelesai = 0;
+        for (auto& p : jadwal) if (p.getSudahSelesai()) totalSelesai++;
+
         vector<Tim*> sorted = daftar_tim;
         sort(sorted.begin(), sorted.end(), [](Tim* a, Tim* b) {
             if (a->getPoin() != b->getPoin()) return a->getPoin() > b->getPoin();
             return a->getMenang() > b->getMenang();
         });
- 
+
         int n = sorted.size();
         judul("KLASEMEN - " + nama + " (" + game_moba + ")");
         cout << left
@@ -614,15 +614,20 @@ public:
                  << sorted[i]->getStatus() << "\n";
         }
         garis('=', 55);
-        if (n >= 1) cout << "  JUARA 1 : " << sorted[0]->getNama()
-                         << " => Rp " << hadiah->getHadiah(1) << "\n";
-        if (n >= 2) cout << "  JUARA 2 : " << sorted[1]->getNama()
-                         << " => Rp " << hadiah->getHadiah(2) << "\n";
-        if (n >= 3) cout << "  JUARA 3 : " << sorted[2]->getNama()
-                         << " => Rp " << hadiah->getHadiah(3) << "\n";
+
+        if (totalSelesai == 0) {
+            cout << "  (Belum ada pertandingan selesai, juara belum bisa ditentukan)\n";
+        } else {
+            if (n >= 1) cout << "  JUARA 1 : " << sorted[0]->getNama()
+                             << " => Rp " << hadiah.getHadiah(1) << "\n";
+            if (n >= 2) cout << "  JUARA 2 : " << sorted[1]->getNama()
+                             << " => Rp " << hadiah.getHadiah(2) << "\n";
+            if (n >= 3) cout << "  JUARA 3 : " << sorted[2]->getNama()
+                             << " => Rp " << hadiah.getHadiah(3) << "\n";
+        }
         garis('=', 55);
     }
- 
+
     void resetSemuaStatistik() {
         char konfirm;
         cout << "  Yakin reset semua statistik? (y/n): ";
@@ -633,77 +638,52 @@ public:
             cout << "  Semua statistik dan jadwal direset!\n";
         }
     }
- 
-    string getGameMoba()  const { return game_moba; }
-    string getNama()      const { return nama; }
-    int    jumlahTim()    const { return daftar_tim.size(); }
-    Tim*   ambilTim(int i)      { return daftar_tim[i]; }
- 
+    string getGameMoba() const { return game_moba; }
+    string getNama()     const { return nama; }
+
     ~Turnamen() {
         for (auto t : daftar_tim) delete t;
     }
 };
- 
-// ============================================================
-//  FUNGSI INPUT TIM BARU (hanya MOBA)
-// ============================================================
 Tim* inputTimBaru(const string& game_moba) {
     string nama, asal, tag;
- 
+
     cout << "  Nama Tim   : "; getline(cin, nama);
     while (nama.empty()) {
         cout << "  Nama tidak boleh kosong! Nama Tim: ";
         getline(cin, nama);
     }
     cout << "  Asal Kota  : "; getline(cin, asal);
-    cout << "  Tag Tim    : "; getline(cin, tag);
- 
-    // Buat tim sesuai game turnamen, tambah atribut khusus
-    if (game_moba == "Mobile Legends") {
-        string sid;
-        cout << "  Server ID  : "; getline(cin, sid);
-        return new TimML(nama, asal, tag, sid);
-    } else if (game_moba == "Honor of Kings") {
-        string reg;
-        cout << "  Region     : "; getline(cin, reg);
-        if (reg.empty()) reg = "Asia";
-        return new TimHoK(nama, asal, tag, reg);
-    } else { // Dota 2
-        cout << "  Divisi     :\n";
-        cout << "    1. Open\n";
-        cout << "    2. Challengers\n";
-        cout << "    3. Premier\n";
-        int d;
-        do {
-            cout << "  Pilihan (1-3): ";
-            while (!(cin >> d)) { cin.clear(); clearBuffer(); cout << "  Input angka: "; }
-            clearBuffer();
-            if (d < 1 || d > 3) cout << "  Pilihan harus 1-3!\n";
-        } while (d < 1 || d > 3);
-        string divisi = (d == 1) ? "Open" : (d == 2) ? "Challengers" : "Premier";
-        return new TimDota(nama, asal, tag, divisi);
+    while (asal.empty()) {
+        cout << "  Asal kota tidak boleh kosong! Asal Kota: ";
+        getline(cin, asal);
     }
+    cout << "  Tag Tim    : "; getline(cin, tag);
+    while (tag.empty()) {
+        cout << "  Tag tidak boleh kosong! Tag Tim: ";
+        getline(cin, tag);
+    }
+
+    if (game_moba == "Mobile Legends")  return new TimML(nama, asal, tag);
+    if (game_moba == "Honor of Kings")  return new TimHoK(nama, asal, tag);
+    return new TimDota(nama, asal, tag);
 }
- 
-// ============================================================
-//  MAIN PROGRAM
-// ============================================================
 int main() {
     judul("SISTEM PENDATAAN TURNAMEN ESPORT MOBA");
     cout << "  Program UAS - Pemrograman Berorientasi Objek\n";
     cout << "  Universitas Tadulako 2025\n";
     garis();
- 
+
     string nama_t, lokasi_t, tanggal_t, sponsor_t;
     long long h1, h2, h3;
     int kat;
- 
+
     cout << "\n  === Setup Turnamen ===\n";
     cout << "  Nama Turnamen  : "; getline(cin, nama_t);
     cout << "  Lokasi         : "; getline(cin, lokasi_t);
     cout << "  Tanggal        : "; getline(cin, tanggal_t);
     cout << "  Sponsor Utama  : "; getline(cin, sponsor_t);
- 
+
     cout << "  Game MOBA      :\n";
     cout << "    1. Mobile Legends\n";
     cout << "    2. Honor of Kings\n";
@@ -714,64 +694,62 @@ int main() {
         clearBuffer();
         if (kat < 1 || kat > 3) cout << "  Pilihan harus 1, 2, atau 3!\n";
     } while (kat < 1 || kat > 3);
- 
+
     string game_moba;
     if      (kat == 1) game_moba = "Mobile Legends";
     else if (kat == 2) game_moba = "Honor of Kings";
     else               game_moba = "Dota 2";
- 
-    cout << "  Hadiah Juara 1 : Rp ";
-    while (!(cin >> h1)) { cin.clear(); clearBuffer(); cout << "  Input angka: "; }
-    clearBuffer();
-    cout << "  Hadiah Juara 2 : Rp ";
-    while (!(cin >> h2)) { cin.clear(); clearBuffer(); cout << "  Input angka: "; }
-    clearBuffer();
-    cout << "  Hadiah Juara 3 : Rp ";
-    while (!(cin >> h3)) { cin.clear(); clearBuffer(); cout << "  Input angka: "; }
-    clearBuffer();
- 
+    do {
+        cout << "  Hadiah Juara 1 : Rp ";
+        while (!(cin >> h1)) { cin.clear(); clearBuffer(); cout << "  Input angka: "; }
+        clearBuffer();
+        cout << "  Hadiah Juara 2 : Rp ";
+        while (!(cin >> h2)) { cin.clear(); clearBuffer(); cout << "  Input angka: "; }
+        clearBuffer();
+        cout << "  Hadiah Juara 3 : Rp ";
+        while (!(cin >> h3)) { cin.clear(); clearBuffer(); cout << "  Input angka: "; }
+        clearBuffer();
+        if (!(h1 > h2 && h2 > h3 && h3 >= 0))
+            cout << "  Hadiah harus: Juara1 > Juara2 > Juara3 >= 0. Ulangi!\n";
+    } while (!(h1 > h2 && h2 > h3 && h3 >= 0));
     Hadiah   hadiah(h1, h2, h3, sponsor_t);
-    Turnamen turnamen(nama_t, lokasi_t, tanggal_t, game_moba, &hadiah);
- 
+    Turnamen turnamen(nama_t, lokasi_t, tanggal_t, game_moba, hadiah);
+
     cout << "\n  Turnamen \"" << nama_t << "\" game " << game_moba
          << " berhasil dibuat!\n";
     cout << "  Hanya tim " << game_moba << " yang dapat didaftarkan.\n";
- 
-    // =========================================================
-    //  DATA DEFAULT
-    // =========================================================
+
     Tim* d1 = nullptr;
     Tim* d2 = nullptr;
     Tim* d3 = nullptr;
- 
+
     if (game_moba == "Mobile Legends") {
-        d1 = new TimML("Legends of Tadulako", "Palu",     "LOT", "ID-1234");
-        d2 = new TimML("Storm Riders",         "Donggala", "STR", "ID-5678");
-        d3 = new TimML("Ragnarok Crew",         "Parigi",   "RGC", "ID-9012");
+        d1 = new TimML("Legends of Tadulako", "Palu",     "LOT");
+        d2 = new TimML("Storm Riders",         "Donggala", "STR");
+        d3 = new TimML("Ragnarok Crew",         "Parigi",   "RGC");
     } else if (game_moba == "Honor of Kings") {
-        d1 = new TimHoK("Legends of Tadulako", "Palu",     "LOT", "Asia");
-        d2 = new TimHoK("Storm Riders",         "Donggala", "STR", "Asia");
-        d3 = new TimHoK("Ragnarok Crew",         "Parigi",   "RGC", "Global");
+        d1 = new TimHoK("Legends of Tadulako", "Palu",     "LOT");
+        d2 = new TimHoK("Storm Riders",         "Donggala", "STR");
+        d3 = new TimHoK("Ragnarok Crew",         "Parigi",   "RGC");
     } else {
-        d1 = new TimDota("Legends of Tadulako", "Palu",     "LOT", "Premier");
-        d2 = new TimDota("Storm Riders",         "Donggala", "STR", "Challengers");
-        d3 = new TimDota("Ragnarok Crew",         "Parigi",   "RGC", "Open");
+        d1 = new TimDota("Legends of Tadulako", "Palu",     "LOT");
+        d2 = new TimDota("Storm Riders",         "Donggala", "STR");
+        d3 = new TimDota("Ragnarok Crew",         "Parigi",   "RGC");
     }
- 
+
     d1->tambahAnggota("Adit"); d1->tambahAnggota("Bima");
     d1->tambahAnggota("Caca"); d1->tambahAnggota("Doni");
- 
+
     d2->tambahAnggota("Eka");  d2->tambahAnggota("Fajar");
     d2->tambahAnggota("Gus");  d2->tambahAnggota("Hilda");
- 
+
     d3->tambahAnggota("Intan"); d3->tambahAnggota("Joko");
     d3->tambahAnggota("Kiki");  d3->tambahAnggota("Lana");
- 
+
     if (!turnamen.daftarkanTim(d1)) delete d1;
     if (!turnamen.daftarkanTim(d2)) delete d2;
     if (!turnamen.daftarkanTim(d3)) delete d3;
-    // =========================================================
- 
+
     int pilihan = -1;
     do {
         garis();
@@ -796,23 +774,21 @@ int main() {
         cout << "   0. Keluar\n";
         garis();
         cout << "  Pilihan: ";
- 
+
         while (!(cin >> pilihan)) {
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "  Input tidak valid! Masukkan angka: ";
         }
         clearBuffer();
- 
+
         switch (pilihan) {
             case 1: {
                 cout << "\n--- Daftarkan Tim Baru ---\n";
                 cout << "  Catatan: turnamen ini khusus tim "
                      << turnamen.getGameMoba() << "!\n";
                 Tim* t = inputTimBaru(turnamen.getGameMoba());
-                if (!turnamen.daftarkanTim(t)) {
-                    delete t;
-                }
+                if (!turnamen.daftarkanTim(t)) delete t;
                 break;
             }
             case 2:  turnamen.tampilDaftarTim();     break;
@@ -833,6 +809,6 @@ int main() {
                 cout << "  Pilihan tidak valid!\n";
         }
     } while (pilihan != 0);
- 
+
     return 0;
 }
